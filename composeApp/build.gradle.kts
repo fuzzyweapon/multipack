@@ -6,12 +6,24 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+repositories {
+    google {
+        mavenContent {
+            includeGroupAndSubgroups("androidx")
+            includeGroupAndSubgroups("com.android")
+            includeGroupAndSubgroups("com.google")
+        }
+    }
+    mavenCentral()
+}
+
 kotlin {
     jvm("desktop")
-    
+
     sourceSets {
         val desktopMain by getting
-        
+        val desktopTest by getting
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -26,6 +38,17 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
         }
+        desktopTest.dependencies {
+            implementation("org.jetbrains.kotlin:kotlin-test-junit5")
+            implementation(compose.desktop.currentOs)
+        }
+    }
+    sourceSets.commonTest.dependencies {
+        implementation(kotlin("test"))
+//        implementation(libs.kotlin.test)
+        implementation("io.kotest:kotest-runner-junit5:5.9.1")
+        @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+        implementation(compose.uiTest)
     }
 }
 
@@ -36,8 +59,12 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.thecryingbeard"
+            packageName = "multipack"
             packageVersion = "1.0.0"
         }
     }
 }
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+ }
