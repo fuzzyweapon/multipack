@@ -52,7 +52,6 @@ kotlin {
     }
 }
 
-
 compose.desktop {
     application {
         mainClass = "com.thecryingbeard.MainKt"
@@ -61,6 +60,16 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "multipack"
             packageVersion = "1.0.0"
+
+            macOS {
+                iconFile.set(project.file("crying_beard_icon.icns"))
+            }
+            windows {
+                iconFile.set(project.file("crying_beard_icon.ico"))
+            }
+            linux {
+                iconFile.set(project.file("crying_beard_icon-128x128.png"))
+            }
         }
     }
 }
