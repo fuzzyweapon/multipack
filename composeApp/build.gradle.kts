@@ -37,6 +37,7 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
         }
         desktopTest.dependencies {
             implementation("org.jetbrains.kotlin:kotlin-test-junit5")
