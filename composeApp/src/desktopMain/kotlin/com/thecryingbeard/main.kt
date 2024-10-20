@@ -27,6 +27,7 @@ fun main() = application {
                         }
                     }
                 })
+                Item("Exit", onClick = ::exitApplication)
             }
         }
         App()
