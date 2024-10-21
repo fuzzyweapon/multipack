@@ -1,11 +1,15 @@
 package com.thecryingbeard
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -97,31 +101,37 @@ fun MainAppUI() {
         Column(modifier = Modifier.weight(1f).padding(8.dp)) {
             Text("Games", style = MaterialTheme.typography.h6)
             Spacer(modifier = Modifier.height(8.dp))
-            games.forEach { game ->
-                Text(
-                    game.name,
-                    modifier = Modifier
-                        .clickable {
-                            AppState.selectedGame = game
-                            // Load files from the selected game
-                            kotlinx.coroutines.GlobalScope.launch {
-                                loadPacks(game)
+            LazyColumn {
+                items(games) { game ->
+                    Text(
+                        game.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(if (AppState.selectedGame == game) Color.Gray else Color.LightGray) // Set background color
+                            .clickable {
+                                AppState.selectedGame = game
+                                // Load files from the selected game
+                                kotlinx.coroutines.GlobalScope.launch {
+                                    loadPacks(game)
+                                }
                             }
+                            .padding(8.dp),
+                        style = if (AppState.selectedGame == game) {
+                            MaterialTheme.typography.body1.copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
+                        } else {
+                            MaterialTheme.typography.body1
                         }
-                        .padding(8.dp),
-                    style = if (AppState.selectedGame == game) {
-                        MaterialTheme.typography.body1.copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
-                    } else {
-                        MaterialTheme.typography.body1
-                    }
-                )
+                    )
+                }
             }
         }
         Column(modifier = Modifier.weight(1f).padding(8.dp)) {
             Text("Packs", style = MaterialTheme.typography.h6)
             Spacer(modifier = Modifier.height(8.dp))
-            packs.forEach { pack ->
-                Text(pack.name, modifier = Modifier.padding(8.dp))
+            LazyColumn {
+                items(packs) { pack ->
+                    Text(pack.name, modifier = Modifier.padding(8.dp))
+                }
             }
         }
     }
