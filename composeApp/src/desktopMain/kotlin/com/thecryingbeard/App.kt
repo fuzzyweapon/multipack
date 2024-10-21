@@ -115,7 +115,7 @@ fun MainAppUI() {
                 title = "Games",
                 isVisible = menusVisible,
                 color = Color.Gray,
-                files = games, modifier = Modifier.weight(1f).fillMaxHeight().fillMaxWidth(0.5f),
+                files = games, modifier = Modifier.weight(1f).fillMaxHeight(),
                 background = { game -> if (AppState.selectedGame == game) Color.Gray else Color.LightGray },
                 clickable = { game ->
                     AppState.selectedGame = game
