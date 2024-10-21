@@ -15,18 +15,7 @@ fun main() = application {
             Menu("File") {
                 Item("Open", onClick = {
                     // Ensure we are on the Event Dispatch Thread
-                    SwingUtilities.invokeLater {
-                        // Start a coroutine to handle the file chooser
-                        CoroutineScope(Dispatchers.Main).launch {
-                            AppState.selectedFolder = showFolderDialog()
-                            if (AppState.selectedFolder != null) {
-                                println("Selected folder: ${AppState.selectedFolder}")
-                                loadGames(AppState.selectedFolder!!)
-                            } else {
-                                println("Folder selection was canceled.")
-                            }
-                        }
-                    }
+                    showFolderSelectionDialog()
                 })
                 Item("Exit", onClick = ::exitApplication)
             }

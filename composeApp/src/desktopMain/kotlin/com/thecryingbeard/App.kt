@@ -12,10 +12,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.*
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import java.awt.FileDialog
@@ -66,6 +69,21 @@ suspend fun showFolderDialog(): String? {
             }
         }
         selectedFolder
+    }
+}
+
+fun showFolderSelectionDialog() {
+    SwingUtilities.invokeLater {
+        // Start a coroutine to handle the file chooser
+        CoroutineScope(Dispatchers.Main).launch {
+            AppState.selectedFolder = showFolderDialog()
+            if (AppState.selectedFolder != null) {
+                println("Selected folder: ${AppState.selectedFolder}")
+                loadGames(AppState.selectedFolder!!)
+            } else {
+                println("Folder selection was canceled.")
+            }
+        }
     }
 }
 
@@ -141,8 +159,9 @@ fun MainAppUI() {
                 selectedItem = AppState.selectedPack
             )
         }
-    }
 
+
+    }
 }
 
 @Composable
