@@ -98,7 +98,12 @@ fun MainAppUI() {
     val packs = AppState.packs
 
     Row(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.weight(1f).padding(8.dp)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .background(Color.Gray)
+                .padding(8.dp)
+        ) {
             Text("Games", style = MaterialTheme.typography.h6)
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn {
@@ -125,7 +130,12 @@ fun MainAppUI() {
                 }
             }
         }
-        Column(modifier = Modifier.weight(1f).padding(8.dp)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .background(Color.LightGray)
+                .padding(8.dp)
+        ) {
             Text("Packs", style = MaterialTheme.typography.h6)
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn {
