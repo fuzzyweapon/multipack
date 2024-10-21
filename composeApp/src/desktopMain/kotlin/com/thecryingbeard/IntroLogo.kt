@@ -26,6 +26,7 @@ fun IntroLogo(onAnimationEnd: () -> Unit) {
                 delay(2000) // Keep the logo visible for 2 seconds
             }
             showLogo = false
+            delay(3000)
             onAnimationEnd()
         }
 

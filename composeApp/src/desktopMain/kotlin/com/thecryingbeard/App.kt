@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -24,14 +25,6 @@ object AppState {
     var selectedGame: File? by mutableStateOf(null)
 }
 
-fun showFileDialog(): String? {
-    val fileDialog = FileDialog(Frame(), "Select a file", FileDialog.LOAD)
-    fileDialog.isVisible = true
-    return if (fileDialog.file != null) {
-        "${fileDialog.directory}${fileDialog.file}"
-    } else null
-}
-
 suspend fun loadGames(folderPath: String) {
     withContext(Dispatchers.IO) {
         val folder = File(folderPath)
@@ -45,6 +38,13 @@ suspend fun loadPacks(gameDirectory: File) {
     }
 }
 
+fun showFileDialog(): String? {
+    val fileDialog = FileDialog(Frame(), "Select a file", FileDialog.LOAD)
+    fileDialog.isVisible = true
+    return if (fileDialog.file != null) {
+        "${fileDialog.directory}${fileDialog.file}"
+    } else null
+}
 suspend fun showFolderDialog(): String? {
     return withContext(context = Dispatchers.IO) {
         var selectedFolder: String? = null
@@ -65,11 +65,24 @@ suspend fun showFolderDialog(): String? {
 fun App() {
     MaterialTheme {
         var showMainUI by remember { mutableStateOf(false) }
+        var logoAnimationComplete by remember { mutableStateOf(false) }
 
         if (showMainUI) {
             MainAppUI() // Show the main UI
         } else {
-            IntroLogo { showMainUI = true } // Transition to main UI
+            IntroLogo (
+                onAnimationEnd = {
+                    logoAnimationComplete = true // Animation has completed
+                }
+            )
+        }
+
+        // Use LaunchedEffect to control the timing of the transition to the main UI
+        LaunchedEffect(logoAnimationComplete) {
+            if (logoAnimationComplete) {
+                delay(3000) // Wait for a moment after the animation completes
+                showMainUI = true // Switch to the main UI
+            }
         }
     }
 }
