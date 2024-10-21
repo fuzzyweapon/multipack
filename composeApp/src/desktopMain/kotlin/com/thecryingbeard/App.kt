@@ -108,7 +108,6 @@ fun App() {
         // Use LaunchedEffect to control the timing of the transition to the main UI
         LaunchedEffect(logoAnimationComplete) {
             if (logoAnimationComplete) {
-                delay(3000) // Wait for a moment after the animation completes
                 showMainUI = true // Switch to the main UI
             }
         }
