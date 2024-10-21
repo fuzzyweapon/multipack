@@ -1,19 +1,27 @@
 package com.thecryingbeard
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import java.awt.FileDialog
 import java.awt.Frame
+import java.io.File
 import javax.swing.JFileChooser
 import javax.swing.SwingUtilities
 
 object AppState {
     var selectedFolder: String? by mutableStateOf(null)
+    var games: List<File> by mutableStateOf(emptyList())
+    var packs: List<File> by mutableStateOf(emptyList())
+    var selectedGame: File? by mutableStateOf(null)
 }
 
 fun showFileDialog(): String? {
@@ -22,6 +30,19 @@ fun showFileDialog(): String? {
     return if (fileDialog.file != null) {
         "${fileDialog.directory}${fileDialog.file}"
     } else null
+}
+
+suspend fun loadGames(folderPath: String) {
+    withContext(Dispatchers.IO) {
+        val folder = File(folderPath)
+        AppState.games = folder.listFiles { file -> file.isDirectory }?.toList() ?: emptyList()
+    }
+}
+
+suspend fun loadPacks(gameDirectory: File) {
+    withContext(Dispatchers.IO) {
+        AppState.packs = gameDirectory.listFiles { file -> file.isFile && file.extension == "pack" }?.toList() ?: emptyList()
+    }
 }
 
 suspend fun showFolderDialog(): String? {
@@ -55,12 +76,41 @@ fun App() {
 
 @Composable
 fun MainAppUI() {
-    // Display the selected file in the UI if any
-    Column {
-        Text("Welcome to the Main App!")
+    val selectedFolder = AppState.selectedFolder
+    val games = AppState.games
+    val packs = AppState.packs
 
-        AppState.selectedFolder?.let {
-            Text("Selected folder: $it")
+    Row(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.weight(1f).padding(8.dp)) {
+            Text("Games", style = MaterialTheme.typography.h6)
+            Spacer(modifier = Modifier.height(8.dp))
+            games.forEach { game ->
+                Text(
+                    game.name,
+                    modifier = Modifier
+                        .clickable {
+                            AppState.selectedGame = game
+                            // Load files from the selected game
+                            kotlinx.coroutines.GlobalScope.launch {
+                                loadPacks(game)
+                            }
+                        }
+                        .padding(8.dp),
+                    style = if (AppState.selectedGame == game) {
+                        MaterialTheme.typography.body1.copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
+                    } else {
+                        MaterialTheme.typography.body1
+                    }
+                )
+            }
+        }
+        Column(modifier = Modifier.weight(1f).padding(8.dp)) {
+            Text("Packs", style = MaterialTheme.typography.h6)
+            Spacer(modifier = Modifier.height(8.dp))
+            packs.forEach { pack ->
+                Text(pack.name, modifier = Modifier.padding(8.dp))
+            }
         }
     }
+
 }

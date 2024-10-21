@@ -21,6 +21,7 @@ fun main() = application {
                             AppState.selectedFolder = showFolderDialog()
                             if (AppState.selectedFolder != null) {
                                 println("Selected folder: ${AppState.selectedFolder}")
+                                loadGames(AppState.selectedFolder!!)
                             } else {
                                 println("Folder selection was canceled.")
                             }
