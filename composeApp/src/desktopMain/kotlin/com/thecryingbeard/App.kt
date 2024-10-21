@@ -1,5 +1,9 @@
 package com.thecryingbeard
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,11 +14,9 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import java.awt.FileDialog
 import java.awt.Frame
@@ -23,10 +25,13 @@ import javax.swing.JFileChooser
 import javax.swing.SwingUtilities
 
 object AppState {
+    var menusVisible: Boolean by mutableStateOf(false)
     var selectedFolder: String? by mutableStateOf(null)
     var games: List<File> by mutableStateOf(emptyList())
     var packs: List<File> by mutableStateOf(emptyList())
     var selectedGame: File? by mutableStateOf(null)
+    var selectedPack: File? by mutableStateOf(null)
+    var gamesShowing: Boolean by mutableStateOf(true)
 }
 
 suspend fun loadGames(folderPath: String) {
@@ -64,6 +69,7 @@ suspend fun showFolderDialog(): String? {
     }
 }
 
+@DelicateCoroutinesApi
 @Composable
 @Preview
 fun App() {
@@ -93,36 +99,89 @@ fun App() {
 
 @Composable
 fun MainAppUI() {
-    val selectedFolder = AppState.selectedFolder
-    val games = AppState.games
-    val packs = AppState.packs
+    val games by remember { derivedStateOf { AppState.games } }
+    val packs by remember { derivedStateOf { AppState.packs } }
+    val gamesShowing by remember { derivedStateOf { AppState.gamesShowing } }
+    var menusVisible by remember { mutableStateOf(AppState.menusVisible) }
+    val coroutineScope = rememberCoroutineScope()
 
     Row(modifier = Modifier.fillMaxSize()) {
+        LaunchedEffect(Unit) {
+            menusVisible = true
+        }
+
+        if (gamesShowing) {
+            FadeInColumn(
+                title = "Games",
+                isVisible = menusVisible,
+                color = Color.Gray,
+                files = games, modifier = Modifier.weight(1f).fillMaxHeight().fillMaxWidth(0.5f),
+                background = { game -> if (AppState.selectedGame == game) Color.Gray else Color.LightGray },
+                clickable = { game ->
+                    AppState.selectedGame = game
+                    // Load files from the selected game
+                    coroutineScope.launch {
+                        game?.let { loadPacks(it) }
+                    }
+                },
+                selectedItem = AppState.selectedGame
+            )
+        }
+
+        (if (gamesShowing) "Packs" else AppState.selectedGame?.name)?.let {
+            FadeInColumn(
+                title = it,
+                isVisible = menusVisible,
+                color = Color.LightGray,
+                files = packs, modifier = Modifier.weight(1f).fillMaxSize(),
+                background = { pack -> if (AppState.selectedPack == pack) Color.LightGray else Color.Gray },
+                clickable = { pack ->
+                    AppState.selectedPack = pack
+                },
+                selectedItem = AppState.selectedPack
+            )
+        }
+    }
+
+}
+
+@Composable
+fun FadeInColumn(
+    title: String,
+    isVisible: Boolean,
+    color: Color,
+    files: List<File>,
+    modifier: Modifier = Modifier,
+    background: (File?) -> Color,
+    clickable: (File?) -> Unit,
+    selectedItem: File?
+) {
+
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(animationSpec = tween(1000)),
+        exit = fadeOut(animationSpec = tween(1000))
+    ) {
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .background(Color.Gray)
+            modifier = modifier
+                .background(color)
                 .padding(8.dp)
         ) {
-            Text("Games", style = MaterialTheme.typography.h6)
+
+            Text(title, style = MaterialTheme.typography.h6)
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn {
-                items(games) { game ->
+                items(files) { file ->
                     Text(
-                        game.name,
+                        file.name,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .background(if (AppState.selectedGame == game) Color.Gray else Color.LightGray) // Set background color
+                            .background(background(file)) // Set background color
                             .clickable {
-                                AppState.selectedGame = game
-                                // Load files from the selected game
-                                kotlinx.coroutines.GlobalScope.launch {
-                                    loadPacks(game)
-                                }
+                                clickable(file)
                             }
                             .padding(8.dp),
-                        style = if (AppState.selectedGame == game) {
-                            MaterialTheme.typography.body1.copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline)
+                        style = if (selectedItem == file) {
+                            MaterialTheme.typography.body1.copy(textDecoration = TextDecoration.Underline)
                         } else {
                             MaterialTheme.typography.body1
                         }
@@ -130,20 +189,5 @@ fun MainAppUI() {
                 }
             }
         }
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .background(Color.LightGray)
-                .padding(8.dp)
-        ) {
-            Text("Packs", style = MaterialTheme.typography.h6)
-            Spacer(modifier = Modifier.height(8.dp))
-            LazyColumn {
-                items(packs) { pack ->
-                    Text(pack.name, modifier = Modifier.padding(8.dp))
-                }
-            }
-        }
     }
-
 }
