@@ -9,11 +9,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.*
@@ -21,6 +21,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
+import java.io.IOException
 import javax.swing.JFileChooser
 import javax.swing.SwingUtilities
 
@@ -84,6 +85,34 @@ fun showFolderSelectionDialog() {
     }
 }
 
+/**
+ * Function to create a new folder
+ *
+ * @param rootDirectoryPath The path to the root directory where the new folder will be created.
+ * @param newFolderName The name of the new folder to be created.
+ * @return Boolean indicating whether the folder was successfully created.
+ */
+fun createNewFolder(rootDirectoryPath: String, newFolderName: String): Boolean {
+    val newFolder = File(rootDirectoryPath, newFolderName)
+    return try {
+        if (newFolder.exists()) {
+            println("Folder already exists: ${newFolder.absolutePath}")
+            false
+        } else {
+            newFolder.mkdirs().also {
+                if (it) {
+                    println("Folder created successfully: ${newFolder.absolutePath}")
+                } else {
+                    println("Failed to create folder: ${newFolder.absolutePath}")
+                }
+            }
+        }
+    } catch (e: IOException) {
+        println("An error occurred while creating the folder: ${e.message}")
+        false
+    }
+}
+
 @DelicateCoroutinesApi
 @Composable
 @Preview
@@ -120,8 +149,10 @@ fun MainAppUI() {
     val gamesShowing by remember { derivedStateOf { AppState.gamesShowing } }
     var menusVisible by remember { mutableStateOf(AppState.menusVisible) }
     val coroutineScope = rememberCoroutineScope()
+    var getGameName by remember { mutableStateOf(false) }
+    var getPackName by remember { mutableStateOf(false) }
 
-    Row(modifier = Modifier.fillMaxSize()) {
+    Row(modifier = Modifier.fillMaxWidth()) {
         LaunchedEffect(Unit) {
             menusVisible = true
         }
@@ -130,62 +161,144 @@ fun MainAppUI() {
             FadeInColumn(
                 title = "Games",
                 isVisible = menusVisible,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
                 color = Color.Gray,
-                files = games, modifier = Modifier.weight(1f).fillMaxHeight(),
-                background = { game -> if (AppState.selectedGame == game) Color.Gray else Color.LightGray },
-                clickable = { game ->
+                files = games,
+                background = { game: File? -> if (AppState.selectedGame == game) Color.Gray else Color.LightGray },
+                clickable = { game: File? ->
                     AppState.selectedGame = game
                     // Load files from the selected game
                     coroutineScope.launch {
                         game?.let { loadPacks(it) }
                     }
                 },
+                add = { getGameName = true },
                 selectedItem = AppState.selectedGame
             )
+        }
+
+        if (getGameName) {
+            AppState.selectedFolder?.let { library ->
+                NameInputDialog({ getGameName = false }, { name ->
+                    createNewFolder(library, name)
+                    runBlocking { loadGames(library) }
+                    getGameName = false
+                })
+            }
         }
 
         (if (gamesShowing) "Packs" else AppState.selectedGame?.name)?.let {
             FadeInColumn(
                 title = it,
                 isVisible = menusVisible,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
                 color = Color.LightGray,
-                files = packs, modifier = Modifier.weight(1f).fillMaxSize(),
-                background = { pack -> if (AppState.selectedPack == pack) Color.LightGray else Color.Gray },
-                clickable = { pack ->
-                    AppState.selectedPack = pack
-                },
+                files = packs,
+                background = { file -> if (AppState.selectedPack == file) Color.LightGray else Color.Gray },
+                clickable = { file -> AppState.selectedPack = file },
+                add = { getPackName = true },
                 selectedItem = AppState.selectedPack
             )
         }
 
-
+        if (getPackName) {
+            if (AppState.selectedFolder != null && AppState.selectedGame != null ) {
+                NameInputDialog({ getPackName = false }, { name ->
+                    createNewFile(AppState.selectedGame!!.absolutePath, "$name.pack")
+                    runBlocking { loadPacks(AppState.selectedGame!!) }
+                    getPackName = false
+                })
+            }
+        }
     }
+}
+
+fun createNewFile(directory: String, fileName: String): File? {
+    val newFile = File(directory, fileName)
+
+    return try {
+        if (newFile.createNewFile()) {
+            println("File created: ${newFile.absolutePath}")
+            newFile
+        } else {
+            println("File already exists.")
+            null
+        }
+    } catch (e: IOException) {
+        e.printStackTrace()
+        null
+    }
+}
+
+@Composable
+fun NameInputDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+    var name by remember { mutableStateOf(TextFieldValue("")) }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text(text = "Enter Name") },
+        text = {
+            Column {
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") }
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onConfirm(name.text)
+                    onDismiss()
+                },
+                enabled = name.text.isNotEmpty()
+            ) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            Button(onClick = { onDismiss() }) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
 fun FadeInColumn(
     title: String,
     isVisible: Boolean,
+    modifier: Modifier,
     color: Color,
     files: List<File>,
-    modifier: Modifier = Modifier,
     background: (File?) -> Color,
     clickable: (File?) -> Unit,
+    add: () -> Unit,
     selectedItem: File?
 ) {
 
     AnimatedVisibility(
         visible = isVisible,
+        modifier = modifier,
         enter = fadeIn(animationSpec = tween(1000)),
         exit = fadeOut(animationSpec = tween(1000))
     ) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .background(color)
                 .padding(8.dp)
         ) {
 
-            Text(title, style = MaterialTheme.typography.h6)
+            Row() {
+                Text(title, style = MaterialTheme.typography.h6)
+                Spacer(modifier = Modifier.height(8.dp).weight(1f))
+                Text(
+                    text = "+",
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.clickable { add() }
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn {
                 items(files) { file ->
