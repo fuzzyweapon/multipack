@@ -236,13 +236,18 @@ fun NameInputDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text(text = "Enter Name") },
+        title = { Text(text = "Enter Name", color = Color.DarkGray) },
         text = {
             Column {
                 TextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") }
+                    label = { Text("Name") },
+                    colors = TextFieldDefaults.textFieldColors(
+                        textColor = Color.DarkGray,
+                        focusedLabelColor = Color.Gray,
+                        focusedIndicatorColor = Color.DarkGray
+                    )
                 )
             }
         },
@@ -252,14 +257,15 @@ fun NameInputDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                     onConfirm(name.text)
                     onDismiss()
                 },
-                enabled = name.text.isNotEmpty()
+                enabled = name.text.isNotEmpty(),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Gray)
             ) {
-                Text("Confirm")
+                Text("Confirm", color = Color.DarkGray)
             }
         },
         dismissButton = {
-            Button(onClick = { onDismiss() }) {
-                Text("Cancel")
+            Button(onClick = { onDismiss() }, colors = ButtonDefaults.buttonColors(backgroundColor = Color.LightGray)) {
+                Text("Cancel", color = Color.DarkGray)
             }
         }
     )
