@@ -27,7 +27,7 @@ import javax.swing.SwingUtilities
 
 object AppState {
     var menusVisible: Boolean by mutableStateOf(false)
-    var selectedFolder: String? by mutableStateOf(null)
+    var selectedFolder: File? by mutableStateOf(null)
     var games: List<File> by mutableStateOf(emptyList())
     var packs: List<File> by mutableStateOf(emptyList())
     var selectedGame: File? by mutableStateOf(null)
@@ -55,15 +55,15 @@ fun showFileDialog(): String? {
         "${fileDialog.directory}${fileDialog.file}"
     } else null
 }
-suspend fun showFolderDialog(): String? {
+suspend fun showFolderDialog(): File? {
     return withContext(context = Dispatchers.IO) {
-        var selectedFolder: String? = null
+        var selectedFolder: File? = null
         SwingUtilities.invokeAndWait {
             val chooser = JFileChooser()
             chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
             val result = chooser.showOpenDialog(null)
             if (result == JFileChooser.APPROVE_OPTION) {
-                selectedFolder = chooser.selectedFile.absolutePath
+                selectedFolder = chooser.selectedFile
             }
         }
         selectedFolder
@@ -75,9 +75,10 @@ fun showFolderSelectionDialog() {
         // Start a coroutine to handle the file chooser
         CoroutineScope(Dispatchers.Main).launch {
             AppState.selectedFolder = showFolderDialog()
-            if (AppState.selectedFolder != null) {
-                println("Selected library folder: ${AppState.selectedFolder}")
-                loadGames(AppState.selectedFolder!!)
+            val dir = AppState.selectedFolder
+            if (dir != null) {
+                println("Selected library folder: $dir")
+                loadGames(dir.absolutePath)
             } else {
                 println("Library folder selection was canceled.")
             }
@@ -180,8 +181,8 @@ fun MainAppUI() {
         if (getGameName) {
             AppState.selectedFolder?.let { library ->
                 NameInputDialog({ getGameName = false }, { name ->
-                    createNewFolder(library, name)
-                    runBlocking { loadGames(library) }
+                    createNewFolder(library.absolutePath, name)
+                    runBlocking { loadGames(library.absolutePath) }
                     getGameName = false
                 })
             }
