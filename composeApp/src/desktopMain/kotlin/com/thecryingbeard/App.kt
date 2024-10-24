@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
@@ -28,17 +31,17 @@ import javax.swing.SwingUtilities
 object AppState {
     var menusVisible: Boolean by mutableStateOf(false)
     var selectedFolder: File? by mutableStateOf(null)
-    var games: List<File> by mutableStateOf(emptyList())
+    var games: List<Game> by mutableStateOf(emptyList())
     var packs: List<File> by mutableStateOf(emptyList())
     var selectedGame: File? by mutableStateOf(null)
     var selectedPack: File? by mutableStateOf(null)
     var gamesShowing: Boolean by mutableStateOf(true)
 }
 
-suspend fun loadGames(folderPath: String) {
+suspend fun loadGames(file: File) {
     withContext(Dispatchers.IO) {
-        val folder = File(folderPath)
-        AppState.games = folder.listFiles { file -> file.isDirectory }?.toList() ?: emptyList()
+        val gameDirs = file.listFiles { file -> file.isDirectory }?.toList() ?: emptyList()
+        AppState.games = gameDirs.map { dir -> Game(dir, dir.name) }
     }
 }
 
@@ -78,7 +81,7 @@ fun showFolderSelectionDialog() {
             val dir = AppState.selectedFolder
             if (dir != null) {
                 println("Selected library folder: $dir")
-                loadGames(dir.absolutePath)
+                loadGames(dir)
             } else {
                 println("Library folder selection was canceled.")
             }
@@ -164,7 +167,8 @@ fun MainAppUI() {
                 isVisible = menusVisible,
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 color = Color.Gray,
-                files = games,
+                files = games.map { game -> game.directory },
+                loader = { file: File? -> file?.let { runBlocking { loadGames(file) } } },
                 background = { game: File? -> if (AppState.selectedGame == game) Color.Gray else Color.LightGray },
                 clickable = { game: File? ->
                     AppState.selectedGame = game
@@ -174,7 +178,8 @@ fun MainAppUI() {
                     }
                 },
                 add = { getGameName = true },
-                selectedItem = AppState.selectedGame
+                selectedItem = AppState.selectedGame,
+                selectedParent = AppState.selectedFolder
             )
         }
 
@@ -182,7 +187,7 @@ fun MainAppUI() {
             AppState.selectedFolder?.let { library ->
                 NameInputDialog({ getGameName = false }, { name ->
                     createNewFolder(library.absolutePath, name)
-                    runBlocking { loadGames(library.absolutePath) }
+                    runBlocking { loadGames(library) }
                     getGameName = false
                 })
             }
@@ -195,10 +200,12 @@ fun MainAppUI() {
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 color = Color.LightGray,
                 files = packs,
+                loader = { file: File? -> file?.let { runBlocking { loadPacks(file) } } },
                 background = { file -> if (AppState.selectedPack == file) Color.LightGray else Color.Gray },
                 clickable = { file -> AppState.selectedPack = file },
                 add = { getPackName = true },
-                selectedItem = AppState.selectedPack
+                selectedItem = AppState.selectedPack,
+                selectedParent = AppState.selectedGame
             )
         }
 
@@ -273,16 +280,35 @@ fun NameInputDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
 }
 
 @Composable
+fun RecycleIcon(loader: (File) -> Unit, selectedItem: File?) {
+    IconButton(
+        onClick = {
+        selectedItem?.let { file ->
+            runBlocking { loader(file) }
+        }
+    },
+        modifier = Modifier.size(18.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Refresh, // Or Icons.Filled.Restore
+            contentDescription = "Recycle/Refresh Icon",
+        )
+    }
+}
+
+@Composable
 fun FadeInColumn(
     title: String,
     isVisible: Boolean,
     modifier: Modifier,
     color: Color,
     files: List<File>,
+    loader: (File?) -> Unit,
     background: (File?) -> Color,
     clickable: (File?) -> Unit,
     add: () -> Unit,
-    selectedItem: File?
+    selectedItem: File?,
+    selectedParent: File?
 ) {
 
     AnimatedVisibility(
@@ -297,9 +323,10 @@ fun FadeInColumn(
                 .padding(8.dp)
         ) {
 
-            Row() {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(title, style = MaterialTheme.typography.h6)
                 Spacer(modifier = Modifier.height(8.dp).weight(1f))
+                RecycleIcon(selectedItem = selectedParent, loader = { library -> loader(library) })
                 Text(
                     text = "+",
                     style = MaterialTheme.typography.h6,
