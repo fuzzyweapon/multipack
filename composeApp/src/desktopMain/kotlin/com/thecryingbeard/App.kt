@@ -76,10 +76,10 @@ fun showFolderSelectionDialog() {
         CoroutineScope(Dispatchers.Main).launch {
             AppState.selectedFolder = showFolderDialog()
             if (AppState.selectedFolder != null) {
-                println("Selected folder: ${AppState.selectedFolder}")
+                println("Selected library folder: ${AppState.selectedFolder}")
                 loadGames(AppState.selectedFolder!!)
             } else {
-                println("Folder selection was canceled.")
+                println("Library folder selection was canceled.")
             }
         }
     }
@@ -96,19 +96,19 @@ fun createNewFolder(rootDirectoryPath: String, newFolderName: String): Boolean {
     val newFolder = File(rootDirectoryPath, newFolderName)
     return try {
         if (newFolder.exists()) {
-            println("Folder already exists: ${newFolder.absolutePath}")
+            println("Game (directory) already exists: ${newFolder.absolutePath}")
             false
         } else {
             newFolder.mkdirs().also {
                 if (it) {
-                    println("Folder created successfully: ${newFolder.absolutePath}")
+                    println("Game (directory) created successfully: ${newFolder.absolutePath}")
                 } else {
-                    println("Failed to create folder: ${newFolder.absolutePath}")
+                    println("Failed to create the game (directory): ${newFolder.absolutePath}")
                 }
             }
         }
     } catch (e: IOException) {
-        println("An error occurred while creating the folder: ${e.message}")
+        println("An error occurred while creating the game (directory): ${e.message}")
         false
     }
 }
