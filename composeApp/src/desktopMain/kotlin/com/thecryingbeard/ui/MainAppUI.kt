@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.thecryingbeard.Game
+import com.thecryingbeard.Pack
 import com.thecryingbeard.components.file.createNewFile
 import com.thecryingbeard.components.file.createNewFolder
 import kotlinx.coroutines.Dispatchers
@@ -81,7 +82,7 @@ fun MainAppUI() {
                 isVisible = menusVisible,
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 color = Color.LightGray,
-                files = packs,
+                files = packs.map { pack -> pack.file },
                 loader = { file: File? -> file?.let { runBlocking { loadPacks(file) } } },
                 background = { file -> if (AppState.selectedPack == file) Color.LightGray else Color.Gray },
                 clickable = { file -> AppState.selectedPack = file },
@@ -224,13 +225,13 @@ fun NameInputDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
 suspend fun loadGames(file: File) {
     withContext(Dispatchers.IO) {
         val gameDirs = file.listFiles { file -> file.isDirectory }?.toList() ?: emptyList()
-        AppState.games = gameDirs.map { dir -> Game(dir, dir.name) }
+        AppState.games = gameDirs.map { dir -> Game(name = dir.name, directory = dir) }
     }
 }
 
 suspend fun loadPacks(gameDirectory: File) {
     withContext(Dispatchers.IO) {
-        AppState.packs =
-            gameDirectory.listFiles { file -> file.isFile && file.extension == "pack" }?.toList() ?: emptyList()
+        val packFiles = gameDirectory.listFiles { file -> file.isFile && file.extension == "pack" }?.toList() ?: emptyList()
+        AppState.packs = packFiles.map { file -> Pack(file.name, file, Game(file.parentFile.name, file.parentFile)) }
     }
 }

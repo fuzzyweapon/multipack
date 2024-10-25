@@ -3,6 +3,7 @@ package com.thecryingbeard.ui
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import com.thecryingbeard.Game
+import com.thecryingbeard.Pack
 import kotlinx.coroutines.*
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import java.awt.FileDialog
@@ -15,7 +16,7 @@ object AppState {
     var menusVisible: Boolean by mutableStateOf(false)
     var selectedFolder: File? by mutableStateOf(null)
     var games: List<Game> by mutableStateOf(emptyList())
-    var packs: List<File> by mutableStateOf(emptyList())
+    var packs: List<Pack> by mutableStateOf(emptyList())
     var selectedGame: File? by mutableStateOf(null)
     var selectedPack: File? by mutableStateOf(null)
     var gamesShowing: Boolean by mutableStateOf(true)
