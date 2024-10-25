@@ -160,6 +160,7 @@ fun FadeInColumn(
                             .clickable {
                                 clickable(file)
                             }
+                            .fillParentMaxWidth()
                             .padding(8.dp),
                         style = if (selectedItem == file) {
                             MaterialTheme.typography.body1.copy(textDecoration = TextDecoration.Underline)
