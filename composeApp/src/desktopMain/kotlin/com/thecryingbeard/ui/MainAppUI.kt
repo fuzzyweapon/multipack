@@ -40,8 +40,14 @@ fun MainAppUI() {
     Row(modifier = Modifier.fillMaxWidth()) {
         LaunchedEffect(Unit) {
             menusVisible = true
-            delay(1000)
-            showFolderSelectionDialog()
+            FolderPreferences.getSelectedFolder()?.let { AppState.selectedFolder = File(it) }
+            val selectedFolder = AppState.selectedFolder
+            if (selectedFolder != null) {
+                loadGames(selectedFolder)
+            } else {
+                delay(1000)
+                showFolderSelectionDialog()
+            }
         }
 
         if (gamesShowing) {

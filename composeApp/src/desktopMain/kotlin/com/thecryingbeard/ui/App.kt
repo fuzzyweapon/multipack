@@ -9,6 +9,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
+import java.util.prefs.Preferences
 import javax.swing.JFileChooser
 import javax.swing.SwingUtilities
 
@@ -81,9 +82,27 @@ fun showFolderSelectionDialog() {
             if (dir != null) {
                 println("Selected library folder: $dir")
                 loadGames(dir)
+                println("Persisting library folder to Java Preferences.")
+                FolderPreferences.setSelectedFolder(dir.absolutePath)
             } else {
                 println("Library folder selection was canceled.")
             }
+        }
+    }
+}
+
+object FolderPreferences {
+    private val preferences = Preferences.userRoot().node("multipack")
+
+    fun getSelectedFolder(): String? {
+        return preferences.get("libraryDirectory", null)
+    }
+
+    fun setSelectedFolder(folderPath: String?) {
+        if (folderPath != null) {
+            preferences.put("libraryDirectory", folderPath)
+        } else {
+            preferences.remove("libraryDirectory")
         }
     }
 }
