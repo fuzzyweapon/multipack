@@ -217,7 +217,8 @@ fun NameInputDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
                     colors = TextFieldDefaults.textFieldColors(
                         textColor = Color.DarkGray,
                         focusedLabelColor = Color.Gray,
-                        focusedIndicatorColor = Color.DarkGray
+                        focusedIndicatorColor = Color.DarkGray,
+                        cursorColor = Color.White
                     )
                 )
             }
