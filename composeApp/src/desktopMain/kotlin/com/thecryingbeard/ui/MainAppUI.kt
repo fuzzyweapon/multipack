@@ -23,6 +23,7 @@ import com.thecryingbeard.Game
 import com.thecryingbeard.Pack
 import com.thecryingbeard.components.file.createNewFile
 import com.thecryingbeard.components.file.createNewFolder
+import com.thecryingbeard.ui.components.ConfirmationDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -118,6 +119,7 @@ fun FadeInColumn(
     selectedItem: File?,
     selectedParent: File?
 ) {
+    var showConfirmDeleteDialog by remember { mutableStateOf(false) }
 
     AnimatedVisibility(
         visible = isVisible,
@@ -140,6 +142,13 @@ fun FadeInColumn(
                     style = MaterialTheme.typography.h6,
                     modifier = Modifier.clickable { add() }
                 )
+                Text(
+                    text = "-",
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.clickable {
+                        showConfirmDeleteDialog = true
+                    }
+                )
             }
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn {
@@ -160,6 +169,17 @@ fun FadeInColumn(
                     )
                 }
             }
+        }
+    }
+
+    selectedItem?.let { file ->
+        ConfirmationDialog(showConfirmDeleteDialog, "delete ${file.name}") { confirmed ->
+            if (confirmed) {
+                // Handle the confirmation (Yes)
+                runBlocking { file.deleteRecursively() }
+                loader(selectedParent)
+            }
+            showConfirmDeleteDialog = false
         }
     }
 }
@@ -187,7 +207,7 @@ fun NameInputDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text(text = "Enter Name", color = Color.DarkGray) },
+        title = { Text(text = "Enter Name") },
         text = {
             Column {
                 TextField(
