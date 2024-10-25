@@ -192,19 +192,15 @@ fun FadeInColumn(
 
 @Composable
 fun RecycleIcon(loader: (File) -> Unit, selectedItem: File?) {
-    IconButton(
-        onClick = {
+    Icon(
+        imageVector = Icons.Filled.Refresh, // Or Icons.Filled.Restore
+        contentDescription = "Recycle/Refresh Icon",
+        modifier = Modifier.size(18.dp).clickable {
             selectedItem?.let { file ->
                 runBlocking { loader(file) }
             }
-        },
-        modifier = Modifier.size(18.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Refresh, // Or Icons.Filled.Restore
-            contentDescription = "Recycle/Refresh Icon",
-        )
-    }
+        }
+    )
 }
 
 @Composable
