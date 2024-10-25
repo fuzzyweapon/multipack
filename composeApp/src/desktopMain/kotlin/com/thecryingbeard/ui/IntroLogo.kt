@@ -1,4 +1,4 @@
-package com.thecryingbeard
+package com.thecryingbeard.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
