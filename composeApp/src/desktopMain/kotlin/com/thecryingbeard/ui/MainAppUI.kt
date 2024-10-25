@@ -24,10 +24,7 @@ import com.thecryingbeard.Pack
 import com.thecryingbeard.components.file.createNewFile
 import com.thecryingbeard.components.file.createNewFolder
 import com.thecryingbeard.ui.components.ConfirmationDialog
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.File
 
 @Composable
@@ -43,6 +40,8 @@ fun MainAppUI() {
     Row(modifier = Modifier.fillMaxWidth()) {
         LaunchedEffect(Unit) {
             menusVisible = true
+            delay(1000)
+            showFolderSelectionDialog()
         }
 
         if (gamesShowing) {

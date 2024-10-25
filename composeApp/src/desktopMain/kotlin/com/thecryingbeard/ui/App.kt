@@ -44,8 +44,6 @@ fun App() {
         LaunchedEffect(logoAnimationComplete) {
             if (logoAnimationComplete) {
                 showMainUI = true // Switch to the main UI
-                delay(1000)
-                showFolderSelectionDialog()
             }
         }
     }
