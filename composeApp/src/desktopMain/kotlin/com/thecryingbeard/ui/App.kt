@@ -2,8 +2,11 @@ package com.thecryingbeard.ui
 
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.viewmodel.CreationExtras
 import com.thecryingbeard.Game
+import com.thecryingbeard.Library
 import com.thecryingbeard.Pack
+import com.thecryingbeard.components.file.YamlSerializationService
 import kotlinx.coroutines.*
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import java.awt.FileDialog
@@ -15,24 +18,24 @@ import javax.swing.SwingUtilities
 
 object AppState {
     var menusVisible: Boolean by mutableStateOf(false)
-    var selectedFolder: File? by mutableStateOf(null)
-    var games: List<Game> by mutableStateOf(emptyList())
+    var library: Library? by mutableStateOf(null)
     var packs: List<Pack> by mutableStateOf(emptyList())
-    var selectedGame: File? by mutableStateOf(null)
-    var selectedPack: File? by mutableStateOf(null)
+    var selectedGame: Game? by mutableStateOf(null)
+    var selectedPack: Pack? by mutableStateOf(null)
     var gamesShowing: Boolean by mutableStateOf(true)
+    val yamlService: YamlSerializationService by lazy { YamlSerializationService() }
 }
 
 @DelicateCoroutinesApi
 @Composable
 @Preview
-fun App() {
+fun App(viewModel: AppViewModel = remember { AppViewModelFactory().create(AppViewModel::class, extras = CreationExtras.Empty) }) {
     MaterialTheme {
         var showMainUI by remember { mutableStateOf(false) }
         var logoAnimationComplete by remember { mutableStateOf(false) }
 
         if (showMainUI) {
-            MainAppUI() // Show the main UI
+            MainAppUI(viewModel) // Show the main UI
         } else {
             IntroLogo (
                 onAnimationEnd = {
@@ -73,17 +76,17 @@ suspend fun showFolderDialog(): File? {
     }
 }
 
-fun showFolderSelectionDialog() {
+fun showLibrarySelectionDialog(viewModel: AppViewModel) {
     SwingUtilities.invokeLater {
         // Start a coroutine to handle the file chooser
         CoroutineScope(Dispatchers.Main).launch {
-            AppState.selectedFolder = showFolderDialog()
-            val dir = AppState.selectedFolder
-            if (dir != null) {
-                println("Selected library folder: $dir")
-                loadGames(dir)
+            showFolderDialog()?.let { AppState.library = Library(it, it.name) }
+            val library = AppState.library
+            if (library != null) {
+                println("Selected library folder: $library")
+                loadGames(viewModel, library)
                 println("Persisting library folder to Java Preferences.")
-                FolderPreferences.setSelectedFolder(dir.absolutePath)
+                FolderPreferences.setSelectedFolder(library.file.absolutePath)
             } else {
                 println("Library folder selection was canceled.")
             }
@@ -93,16 +96,17 @@ fun showFolderSelectionDialog() {
 
 object FolderPreferences {
     private val preferences = Preferences.userRoot().node("multipack")
+    const val key = "libraryDirectory"
 
     fun getSelectedFolder(): String? {
-        return preferences.get("libraryDirectory", null)
+        return preferences.get(key, null)
     }
 
     fun setSelectedFolder(folderPath: String?) {
         if (folderPath != null) {
-            preferences.put("libraryDirectory", folderPath)
+            preferences.put(key, folderPath)
         } else {
-            preferences.remove("libraryDirectory")
+            preferences.remove(key)
         }
     }
 }

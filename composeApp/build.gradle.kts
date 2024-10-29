@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
+    kotlin("plugin.serialization") version "2.0.20"
 }
 
 repositories {
@@ -37,7 +38,9 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation("androidx.compose.material:material-icons-extended:1.7.4")
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+            implementation("com.charleskorn.kaml:kaml:0.61.0")
         }
         desktopTest.dependencies {
             implementation("org.jetbrains.kotlin:kotlin-test-junit5")
