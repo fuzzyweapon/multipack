@@ -47,6 +47,18 @@ class AppViewModel : ViewModel() {
         }
     }
 
+    fun setPacks(newPacks: List<Pack>) {
+        _packs.clear()
+        _packs.addAll(newPacks)
+
+        packNames.clear()
+
+        newPacks.forEach { pack ->
+            packNames.add(mutableStateOf(pack.name))
+        }
+
+    }
+
     fun updateGameName(game: Game, newName: String) {
         val index = _games.indexOf(game)
         if (index != -1) {
@@ -60,7 +72,6 @@ class AppViewModel : ViewModel() {
             AppState.selectedGame?.file = newFile
         }
     }
-
     fun updateGameDirectory(game: Game, newDirectory: File) {
         val index = _games.indexOf(game)
         if (index != -1) {
@@ -68,6 +79,7 @@ class AppViewModel : ViewModel() {
             gameDirs[index].value = newDirectory
         }
     }
+
     fun updateGameModDirectory(game: Game, modDir: File) {
         val index = _games.indexOf(game)
         if (index != -1) {

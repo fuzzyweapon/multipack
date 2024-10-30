@@ -19,7 +19,6 @@ import javax.swing.SwingUtilities
 object AppState {
     var menusVisible: Boolean by mutableStateOf(false)
     var library: Library? by mutableStateOf(null)
-    var packs: List<Pack> by mutableStateOf(emptyList())
     var selectedGame: Game? by mutableStateOf(null)
     var selectedPack: Pack? by mutableStateOf(null)
     var gamesShowing: Boolean by mutableStateOf(true)

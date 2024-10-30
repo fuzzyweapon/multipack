@@ -124,7 +124,7 @@ fun MainAppUI(
                 add = { getPackName = true },
                 selectedItem = AppState.selectedPack,
                 selectedParent = AppState.selectedGame,
-                menuItems = AppState.packs
+                menuItems = viewModel.packs
             )
         }
 
@@ -440,7 +440,7 @@ suspend fun loadGames(viewModel: AppViewModel, library: Item) {
 suspend fun loadPacks(viewModel: AppViewModel, game: Item) {
     withContext(Dispatchers.IO) {
         val packFiles = game.file.listFiles { file -> file.isFile && file.extension == "pack" }?.toList() ?: emptyList()
-        AppState.packs =
+        viewModel.setPacks(
             packFiles.map { file ->
                 Pack(
                     name = file.name,
@@ -450,5 +450,6 @@ suspend fun loadPacks(viewModel: AppViewModel, game: Item) {
                     }!!
                 )
             }
+        )
     }
 }
