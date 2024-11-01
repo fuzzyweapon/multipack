@@ -13,9 +13,7 @@ import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -210,18 +208,8 @@ fun FadeInColumn(
                 if (title == "Games") SettingsIcon(
                     selectedItem = selectedItem,
                     loader = { game -> settingsLoader(game) })
-                Text(
-                    text = "+",
-                    style = MaterialTheme.typography.h6,
-                    modifier = Modifier.clickable { add() }
-                )
-                Text(
-                    text = "-",
-                    style = MaterialTheme.typography.h6,
-                    modifier = Modifier.clickable {
-                        showConfirmDeleteDialog = true
-                    }
-                )
+                PlusIcon(add = add)
+                MinusIcon { showConfirmDeleteDialog = true }
             }
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn {
@@ -278,6 +266,42 @@ fun RefreshIcon(loader: (Item) -> Unit, selectedItem: Item?) {
                 runBlocking { loader(file) }
             }
         }
+    )
+}
+
+@Composable
+fun PlusIcon(add: () -> Unit) {
+    Icon(
+        imageVector = Icons.Default.Add,
+        contentDescription = "Add Game",
+        modifier = Modifier.size(18.dp).clickable { add() }
+    )
+}
+
+@Composable
+fun MinusIcon(minus: () -> Unit) {
+    Icon(
+        imageVector = Icons.Default.Remove,
+        contentDescription = "Remove Game",
+        modifier = Modifier.size(18.dp).clickable { minus() }
+    )
+}
+
+@Composable
+fun PlusIcon(add: () -> Unit) {
+    Icon(
+        imageVector = Icons.Default.Add,
+        contentDescription = "Add Game",
+        modifier = Modifier.size(18.dp).clickable { add() }
+    )
+}
+
+@Composable
+fun MinusIcon(minus: () -> Unit) {
+    Icon(
+        imageVector = Icons.Default.Remove,
+        contentDescription = "Remove Game",
+        modifier = Modifier.size(18.dp).clickable { minus() }
     )
 }
 
