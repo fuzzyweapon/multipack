@@ -59,6 +59,14 @@ class AppViewModel : ViewModel() {
 
     }
 
+    fun addNewGame(name: String) {
+        val newGame = Game(name, File(AppState.library!!.file, name), GameConfig(""))
+        _games.add(newGame)
+        gameNames.add(mutableStateOf(name))
+        gameDirs.add(mutableStateOf(newGame.file))
+        gameModDirectories.add(mutableStateOf(newGame.config!!))
+    }
+
     fun updateGameName(game: Game, newName: String) {
         val index = _games.indexOf(game)
         if (index != -1) {

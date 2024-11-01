@@ -105,7 +105,7 @@ fun MainAppUI(
             AppState.library?.let { library ->
                 NameInputDialog({ getGameName = false }, { name ->
                     createNewFolder(library.file.absolutePath, name)
-                    runBlocking { loadGames(viewModel, library) }
+                    viewModel.addNewGame(name)
                     getGameName = false
                 })
             }
