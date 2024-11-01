@@ -259,7 +259,7 @@ fun FadeInColumn(
 fun SettingsIcon(loader: (Item) -> Unit, selectedItem: Item?) {
     Icon(
         imageVector = Icons.Filled.Settings,
-        contentDescription = "Settings",
+        contentDescription = "Game Settings",
         modifier = Modifier.size(18.dp).clickable {
             selectedItem?.let { item ->
                 loader(item)
@@ -272,7 +272,7 @@ fun SettingsIcon(loader: (Item) -> Unit, selectedItem: Item?) {
 fun RefreshIcon(loader: (Item) -> Unit, selectedItem: Item?) {
     Icon(
         imageVector = Icons.Filled.Refresh, // Or Icons.Filled.Restore
-        contentDescription = "Refresh Icon",
+        contentDescription = "Refresh Games",
         modifier = Modifier.size(18.dp).clickable {
             selectedItem?.let { file ->
                 runBlocking { loader(file) }
