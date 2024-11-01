@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import com.thecryingbeard.Game
 import com.thecryingbeard.GameConfig
 import com.thecryingbeard.Pack
+import com.thecryingbeard.components.Item
 import java.io.File
 import kotlin.reflect.KClass
 
@@ -101,6 +102,21 @@ class AppViewModel : ViewModel() {
         if (index != -1) {
             _packs[index] = pack.copy(name = newName)  // Update the pack data itself
             packNames[index].value = newName           // Update the UI state
+        }
+    }
+
+    fun removeItem(item: Item) {
+        var located = false
+        val index = _games.indexOf(item)
+        if (index != -1) {
+            _games.removeAt(index)
+            located = true
+        }
+        if (!located) {
+            val index2 = _packs.indexOf(item)
+            if (index2 != -1) {
+                _packs.removeAt(index2)
+            }
         }
     }
 }

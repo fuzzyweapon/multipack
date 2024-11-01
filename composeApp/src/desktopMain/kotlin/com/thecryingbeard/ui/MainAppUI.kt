@@ -97,7 +97,8 @@ fun MainAppUI(
                 add = { getGameName = true },
                 selectedItem = AppState.selectedGame,
                 selectedParent = AppState.library as Item?,
-                menuItems = viewModel.games
+                menuItems = viewModel.games,
+                viewModel = viewModel,
             )
         }
 
@@ -124,7 +125,8 @@ fun MainAppUI(
                 add = { getPackName = true },
                 selectedItem = AppState.selectedPack,
                 selectedParent = AppState.selectedGame,
-                menuItems = viewModel.packs
+                menuItems = viewModel.packs,
+                viewModel = viewModel,
             )
         }
 
@@ -185,6 +187,7 @@ fun FadeInColumn(
     selectedItem: Item?,
     selectedParent: Item?,
     menuItems: List<Item>,
+    viewModel: AppViewModel
 ) {
     var showConfirmDeleteDialog by remember { mutableStateOf(false) }
 
@@ -244,9 +247,8 @@ fun FadeInColumn(
     selectedItem?.let { item ->
         ConfirmationDialog(showConfirmDeleteDialog, "delete ${item.name}") { confirmed ->
             if (confirmed) {
-                // Handle the confirmation (Yes)
                 runBlocking { item.file.deleteRecursively() }
-                libraryLoader(selectedParent)
+                viewModel.removeItem(item)
             }
             showConfirmDeleteDialog = false
         }
