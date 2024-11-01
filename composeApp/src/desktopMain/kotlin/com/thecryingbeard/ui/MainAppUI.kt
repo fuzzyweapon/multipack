@@ -213,7 +213,7 @@ fun FadeInColumn(
             }
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn {
-                items(menuItems) { item ->
+                items(menuItems.sortedBy { it.name }) { item ->
                     Text(
                         item.name,
                         modifier = Modifier
