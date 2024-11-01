@@ -82,7 +82,7 @@ fun MainAppUI(
             FadeInColumn(
                 title = "Games",
                 isVisible = menusVisible,
-                modifier = Modifier.weight(1f).fillMaxHeight(),
+                modifier = Modifier.wrapContentSize().fillMaxHeight(),
                 color = Color.Gray,
                 libraryLoader = { item: Item? -> item?.let { runBlocking { loadGames(viewModel, item as Library) } } },
                 settingsLoader = { item: Item? -> item?.let { openGameSettings = true } },
@@ -114,7 +114,7 @@ fun MainAppUI(
             FadeInColumn(
                 title = title,
                 isVisible = menusVisible,
-                modifier = Modifier.weight(1f).fillMaxHeight(),
+                modifier = Modifier.wrapContentSize().fillMaxHeight(),
                 color = Color.LightGray,
                 libraryLoader = { game: Item? -> runBlocking { game?.let { loadPacks(viewModel, it) } } },
                 settingsLoader = { item: Item? -> item?.let { } },
@@ -198,28 +198,33 @@ fun FadeInColumn(
         Column(
             modifier = Modifier
                 .background(color)
+                .wrapContentWidth()
                 .padding(8.dp)
         ) {
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.wrapContentWidth()
+            ) {
                 Text(title, style = MaterialTheme.typography.h6)
-                Spacer(modifier = Modifier.height(8.dp).weight(1f))
-                RefreshIcon(selectedItem = selectedParent, loader = { directory -> libraryLoader(directory) })
-                if (title == "Games") SettingsIcon(
-                    selectedItem = selectedItem,
-                    loader = { game -> settingsLoader(game) })
-                PlusIcon(add = add)
-                MinusIcon { showConfirmDeleteDialog = true }
+                Spacer(modifier = Modifier.height(8.dp).width(36.dp))
+                Row(horizontalArrangement = Arrangement.End) {
+                    RefreshIcon(selectedItem = selectedParent, loader = { directory -> libraryLoader(directory) })
+                    if (title == "Games") SettingsIcon(
+                        selectedItem = selectedItem,
+                        loader = { game -> settingsLoader(game) })
+                    PlusIcon(add = add)
+                    MinusIcon { showConfirmDeleteDialog = true }
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            LazyColumn {
+            LazyColumn(modifier = Modifier.wrapContentWidth().fillMaxHeight()) {
                 items(menuItems.sortedBy { it.name }) { item ->
                     Text(
                         item.name,
                         modifier = Modifier
                             .background(background(item)) // Set background color
                             .clickable { clickable(item) }
-                            .fillParentMaxWidth()
                             .padding(8.dp),
                         style = if (selectedItem?.file?.canonicalPath == item.file.canonicalPath) {
                             MaterialTheme.typography.body1.copy(textDecoration = TextDecoration.Underline)
@@ -266,24 +271,6 @@ fun RefreshIcon(loader: (Item) -> Unit, selectedItem: Item?) {
                 runBlocking { loader(file) }
             }
         }
-    )
-}
-
-@Composable
-fun PlusIcon(add: () -> Unit) {
-    Icon(
-        imageVector = Icons.Default.Add,
-        contentDescription = "Add Game",
-        modifier = Modifier.size(18.dp).clickable { add() }
-    )
-}
-
-@Composable
-fun MinusIcon(minus: () -> Unit) {
-    Icon(
-        imageVector = Icons.Default.Remove,
-        contentDescription = "Remove Game",
-        modifier = Modifier.size(18.dp).clickable { minus() }
     )
 }
 
