@@ -115,7 +115,10 @@ fun MainAppUI(
                 libraryLoader = { game: Item? -> runBlocking { game?.let { loadPacks(viewModel, it) } } },
                 settingsLoader = { item: Item? -> item?.let { } },
                 background = { file -> if (AppState.selectedPack?.file == file) Color.LightGray else Color.Gray },
-                clickable = { pack -> AppState.selectedPack = pack as Pack },
+                clickable = { pack ->
+                    AppState.selectedPack = pack as Pack
+                    AppState.gamesShowing = false
+                            },
                 add = { getPackName = true },
                 selectedItem = AppState.selectedPack,
                 selectedParent = AppState.selectedGame,
@@ -212,6 +215,8 @@ fun FadeInColumn(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.wrapContentWidth()
             ) {
+                val gamesShowing by remember { derivedStateOf { AppState.gamesShowing } }
+                if (!gamesShowing) { GreaterThanSymbol() }
                 Text(title, style = MaterialTheme.typography.h6)
                 Spacer(modifier = Modifier.height(8.dp).width(36.dp))
                 Row(horizontalArrangement = Arrangement.End) {
@@ -295,6 +300,15 @@ fun MinusIcon(minus: () -> Unit) {
         imageVector = Icons.Default.Remove,
         contentDescription = "Remove Game",
         modifier = Modifier.size(18.dp).clickable { minus() }
+    )
+}
+
+@Composable
+fun GreaterThanSymbol() {
+    Text(
+        text = "> ",
+        style = MaterialTheme.typography.h6,
+        modifier = Modifier.clickable { AppState.gamesShowing = true }
     )
 }
 
