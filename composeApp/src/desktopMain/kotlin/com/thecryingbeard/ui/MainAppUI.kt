@@ -35,6 +35,12 @@ import kotlinx.coroutines.*
 import java.io.File
 import javax.swing.SwingUtilities
 
+/**
+ * Composable function that sets up the main user interface of the application.
+ * Manages the display of games and packs, and handles various UI interactions.
+ *
+ * @param viewModel The view model that provides data and logic for the UI.
+ */
 @Composable
 fun MainAppUI(
     viewModel: AppViewModel = remember {
@@ -100,16 +106,6 @@ fun MainAppUI(
             )
         }
 
-        if (getGameName) {
-            AppState.library?.let { library ->
-                NameInputDialog({ getGameName = false }, { name ->
-                    createNewFolder(library.file.absolutePath, name)
-                    viewModel.addNewGame(name)
-                    getGameName = false
-                })
-            }
-        }
-
         (if (gamesShowing) "Packs" else AppState.selectedGame?.name)?.let { title ->
             FadeInColumn(
                 title = title,
@@ -128,48 +124,58 @@ fun MainAppUI(
             )
         }
 
-        if (getPackName) {
-            if (AppState.library != null && AppState.selectedGame != null) {
+        when (true) {
+            getGameName -> AppState.library?.let { library ->
+                NameInputDialog({ getGameName = false }, { name ->
+                    createNewFolder(library.file.absolutePath, name)
+                    viewModel.addNewGame(name)
+                    getGameName = false
+                })
+            }
+
+            getPackName -> if (AppState.library != null && AppState.selectedGame != null) {
                 NameInputDialog({ getPackName = false }, { name ->
                     createNewFile(AppState.selectedGame!!.file.absolutePath, "$name.pack")
                     runBlocking { loadPacks(viewModel, AppState.selectedGame!!) }
                     getPackName = false
                 })
             }
-        }
 
-        if (openGameSettings) {
-            GameSettingsDialog(
+            openGameSettings -> GameSettingsDialog(
                 selectedGame = AppState.selectedGame!!,
                 onDismiss = { openGameSettings = false },
                 onConfirm = { gameName, settingsModDirText ->
                     renameFolder(AppState.selectedGame!!.file.absolutePath, gameName)
                     viewModel.updateGameName(AppState.selectedGame!!, gameName)
                     viewModel.updateGameDirectory(AppState.selectedGame!!, AppState.library?.file!!.resolve(gameName))
-//                    runBlocking { loadGames(AppState.library!!) }
                     AppState.selectedGame?.config?.modsFolderPath = settingsModDirText
                     openGameSettings = false
                 },
             )
+            else -> Unit
         }
+
     }
 }
 
 /**
- * Displays a column with a fade-in animation that contains a title, icons, and a list of items.
+ * A composable function that displays a fade-in column with a title, icons,
+ * and a list of menu items. Provides functionality to add, remove, and load
+ * settings for items within the column.
  *
- * @param title The title text to display at the top of the column.
- * @param isVisible Whether the column is visible.
+ * @param title The title of the column.
+ * @param isVisible Determines if the column is visible.
  * @param modifier Modifier to be applied to the column.
- * @param color Background color for the column.
- * @param libraryLoader A lambda function to load the library or perform an action, given a `Named` item.
- * @param settingsLoader A lambda function to load settings, given an `Item`.
- * @param background A lambda function that returns a color for the background based on a file.
- * @param clickable A lambda function to handle item click events, given a `Named` item.
- * @param add A lambda function to handle add item action.
- * @param selectedItem The currently selected item.
- * @param selectedParent The parent of the currently selected item.
+ * @param color The background color for the column.
+ * @param libraryLoader Function to load the library for a given item.
+ * @param settingsLoader Function to load the settings for a given item.
+ * @param background Function to determine the background color for each item.
+ * @param clickable Function to handle item click events.
+ * @param add Function to add a new item to the column.
+ * @param selectedItem The currently selected item in the column.
+ * @param selectedParent The parent item of the currently selected item.
  * @param menuItems The list of items to display in the column.
+ * @param viewModel The view model to manage the state of the application.
  */
 @Composable
 fun FadeInColumn(
