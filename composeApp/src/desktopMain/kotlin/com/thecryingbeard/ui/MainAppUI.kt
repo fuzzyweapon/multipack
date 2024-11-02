@@ -50,47 +50,80 @@ fun MainAppUI(
         )
     },
 ) {
-    val gamesShowing by remember { derivedStateOf { AppState.gamesShowing } }
     var menusVisible by remember { mutableStateOf(AppState.menusVisible) }
     val coroutineScope = rememberCoroutineScope()
     var getGameName by remember { mutableStateOf(false) }
     var getPackName by remember { mutableStateOf(false) }
     var openGameSettings by remember { mutableStateOf(false) }
 
-    Row(modifier = Modifier.fillMaxWidth()) {
-        LaunchedEffect(Unit) {
-            menusVisible = true
-            FolderPreferences.getSelectedFolder()?.let {
-                val libraryDirectory = File(it)
-                AppState.library = Library(libraryDirectory, libraryDirectory.name)
-            }
-            val library = AppState.library
-            if (library != null) {
-                loadGames(viewModel, library)
-            } else {
-                delay(1000)
-                showLibrarySelectionDialog(viewModel)
+    Column {
+        if (!menusVisible) {
+            Row(modifier = Modifier.wrapContentSize().fillMaxWidth().padding(8.dp)) {
+                val padding = 4.dp
+                AppState.selectedGame?.name?.let { selectedGameName ->
+                    GreaterThanSymbol(clickable = { menusVisible = true })
+                    Text(
+                        text = selectedGameName,
+                        modifier = Modifier.padding(horizontal = padding),
+                        style = MaterialTheme.typography.h6
+                    )
+
+                    if (!menusVisible) {
+                        Text("/", style = MaterialTheme.typography.h6)
+                        AppState.selectedPack?.name?.let {
+                            Text(
+                                text = it,
+                                modifier = Modifier.padding(horizontal = padding),
+                                style = MaterialTheme.typography.h6
+                            )
+                        }
+                    }
+                }
             }
         }
-
-        LaunchedEffect(AppState.selectedGame?.config?.modsFolderPath) {
-            val selectedGame = AppState.selectedGame
-            if (selectedGame != null) {
-                AppState.yamlService.serialize(
-                    data = selectedGame.config!!,
-                    filePath = selectedGame.file.resolve("game.yaml").canonicalPath,
-                    serializer = GameConfig.serializer()
-                )
+        Row(modifier = Modifier.fillMaxWidth()) {
+            LaunchedEffect(Unit) {
+                menusVisible = true
+                FolderPreferences.getSelectedFolder()?.let {
+                    val libraryDirectory = File(it)
+                    AppState.library = Library(libraryDirectory, libraryDirectory.name)
+                }
+                val library = AppState.library
+                if (library != null) {
+                    loadGames(viewModel, library)
+                } else {
+                    delay(1000)
+                    showLibrarySelectionDialog(viewModel)
+                }
             }
-        }
 
-        if (gamesShowing) {
+            LaunchedEffect(AppState.selectedGame?.config?.modsFolderPath) {
+                val selectedGame = AppState.selectedGame
+                if (selectedGame != null) {
+                    AppState.yamlService.serialize(
+                        data = selectedGame.config!!,
+                        filePath = selectedGame.file.resolve("game.yaml").canonicalPath,
+                        serializer = GameConfig.serializer()
+                    )
+                }
+            }
+
+
             FadeInColumn(
                 title = "Games",
                 isVisible = menusVisible,
-                modifier = Modifier.wrapContentSize().fillMaxHeight(),
+                modifier = Modifier.weight(1f),
                 color = Color.Gray,
-                libraryLoader = { item: Item? -> item?.let { runBlocking { loadGames(viewModel, item as Library) } } },
+                libraryLoader = { item: Item? ->
+                    item?.let {
+                        runBlocking {
+                            loadGames(
+                                viewModel,
+                                item as Library
+                            )
+                        }
+                    }
+                },
                 settingsLoader = { item: Item? -> item?.let { openGameSettings = true } },
                 background = { game: Item -> if (AppState.selectedGame?.file == game.file) Color.Gray else Color.LightGray },
                 clickable = { game: Item ->
@@ -104,60 +137,62 @@ fun MainAppUI(
                 menuItems = viewModel.games,
                 viewModel = viewModel,
             )
-        }
 
-        (if (gamesShowing) "Packs" else AppState.selectedGame?.name)?.let { title ->
             FadeInColumn(
-                title = title,
+                title = "Packs",
                 isVisible = menusVisible,
-                modifier = Modifier.wrapContentSize().fillMaxHeight(),
+                modifier = Modifier.weight(1f),
                 color = Color.LightGray,
                 libraryLoader = { game: Item? -> runBlocking { game?.let { loadPacks(viewModel, it) } } },
                 settingsLoader = { item: Item? -> item?.let { } },
                 background = { file -> if (AppState.selectedPack?.file == file) Color.LightGray else Color.Gray },
                 clickable = { pack ->
                     AppState.selectedPack = pack as Pack
-                    AppState.gamesShowing = false
-                            },
+                    menusVisible = false
+                },
                 add = { getPackName = true },
                 selectedItem = AppState.selectedPack,
                 selectedParent = AppState.selectedGame,
                 menuItems = viewModel.packs,
                 viewModel = viewModel,
             )
-        }
 
-        when (true) {
-            getGameName -> AppState.library?.let { library ->
-                NameInputDialog({ getGameName = false }, { name ->
-                    createNewFolder(library.file.absolutePath, name)
-                    viewModel.addNewGame(name)
-                    getGameName = false
-                })
+            when (true) {
+                getGameName -> AppState.library?.let { library ->
+                    NameInputDialog({ getGameName = false }, { name ->
+                        createNewFolder(library.file.absolutePath, name)
+                        viewModel.addNewGame(name)
+                        getGameName = false
+                    })
+                }
+
+                getPackName -> if (AppState.library != null && AppState.selectedGame != null) {
+                    NameInputDialog({ getPackName = false }, { name ->
+                        createNewFile(AppState.selectedGame!!.file.absolutePath, "$name.pack")
+                        runBlocking { loadPacks(viewModel, AppState.selectedGame!!) }
+                        getPackName = false
+                    })
+                }
+
+                openGameSettings -> GameSettingsDialog(
+                    selectedGame = AppState.selectedGame!!,
+                    onDismiss = { openGameSettings = false },
+                    onConfirm = { gameName, settingsModDirText ->
+                        renameFolder(AppState.selectedGame!!.file.absolutePath, gameName)
+                        viewModel.updateGameName(AppState.selectedGame!!, gameName)
+                        viewModel.updateGameDirectory(
+                            AppState.selectedGame!!,
+                            AppState.library?.file!!.resolve(gameName)
+                        )
+                        AppState.selectedGame?.config?.modsFolderPath = settingsModDirText
+                        openGameSettings = false
+                    },
+                )
+
+                else -> Unit
             }
 
-            getPackName -> if (AppState.library != null && AppState.selectedGame != null) {
-                NameInputDialog({ getPackName = false }, { name ->
-                    createNewFile(AppState.selectedGame!!.file.absolutePath, "$name.pack")
-                    runBlocking { loadPacks(viewModel, AppState.selectedGame!!) }
-                    getPackName = false
-                })
-            }
-
-            openGameSettings -> GameSettingsDialog(
-                selectedGame = AppState.selectedGame!!,
-                onDismiss = { openGameSettings = false },
-                onConfirm = { gameName, settingsModDirText ->
-                    renameFolder(AppState.selectedGame!!.file.absolutePath, gameName)
-                    viewModel.updateGameName(AppState.selectedGame!!, gameName)
-                    viewModel.updateGameDirectory(AppState.selectedGame!!, AppState.library?.file!!.resolve(gameName))
-                    AppState.selectedGame?.config?.modsFolderPath = settingsModDirText
-                    openGameSettings = false
-                },
-            )
-            else -> Unit
         }
-
     }
 }
 
@@ -200,25 +235,22 @@ fun FadeInColumn(
 
     AnimatedVisibility(
         visible = isVisible,
-        modifier = modifier,
+        modifier = modifier.fillMaxSize(),
         enter = fadeIn(animationSpec = tween(1000)),
         exit = fadeOut(animationSpec = tween(1000))
     ) {
         Column(
             modifier = Modifier
                 .background(color)
-                .wrapContentWidth()
+                .fillMaxSize()
                 .padding(8.dp)
         ) {
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.wrapContentWidth()
             ) {
-                val gamesShowing by remember { derivedStateOf { AppState.gamesShowing } }
-                if (!gamesShowing) { GreaterThanSymbol() }
                 Text(title, style = MaterialTheme.typography.h6)
-                Spacer(modifier = Modifier.height(8.dp).width(36.dp))
+                Spacer(modifier = Modifier.height(8.dp).weight(1f))
                 Row(horizontalArrangement = Arrangement.End) {
                     RefreshIcon(selectedItem = selectedParent, loader = { directory -> libraryLoader(directory) })
                     if (title == "Games") SettingsIcon(
@@ -236,6 +268,7 @@ fun FadeInColumn(
                         modifier = Modifier
                             .background(background(item)) // Set background color
                             .clickable { clickable(item) }
+                            .fillParentMaxWidth()
                             .padding(8.dp),
                         style = if (selectedItem?.file?.canonicalPath == item.file.canonicalPath) {
                             MaterialTheme.typography.body1.copy(textDecoration = TextDecoration.Underline)
@@ -304,11 +337,11 @@ fun MinusIcon(minus: () -> Unit) {
 }
 
 @Composable
-fun GreaterThanSymbol() {
+fun GreaterThanSymbol(clickable: () -> Unit) {
     Text(
-        text = "> ",
+        text = ">",
         style = MaterialTheme.typography.h6,
-        modifier = Modifier.clickable { AppState.gamesShowing = true }
+        modifier = Modifier.clickable { clickable() }
     )
 }
 
