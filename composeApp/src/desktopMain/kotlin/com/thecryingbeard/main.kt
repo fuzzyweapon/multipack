@@ -20,10 +20,7 @@ fun main() = application {
         val viewModel = remember { AppViewModelFactory().create(AppViewModel::class, extras = CreationExtras.Empty) }
         MenuBar {
             Menu("File") {
-                Item("Open", onClick = {
-                    // Ensure we are on the Event Dispatch Thread
-                    showLibrarySelectionDialog(viewModel)
-                })
+                Item("Open Library", onClick = { showLibrarySelectionDialog(viewModel) })
                 Item("Exit", onClick = ::exitApplication)
             }
         }

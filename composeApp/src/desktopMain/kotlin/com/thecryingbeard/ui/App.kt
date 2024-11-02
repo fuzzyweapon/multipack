@@ -75,6 +75,7 @@ suspend fun showFolderDialog(): File? {
 }
 
 fun showLibrarySelectionDialog(viewModel: AppViewModel) {
+    // Ensure we are on the Event Dispatch Thread
     SwingUtilities.invokeLater {
         // Start a coroutine to handle the file chooser
         CoroutineScope(Dispatchers.Main).launch {
