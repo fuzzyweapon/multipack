@@ -57,7 +57,7 @@ fun MainAppUI(
     var openGameSettings by remember { mutableStateOf(false) }
 
     Column {
-        if (!menusVisible) { PackUI(greaterThanClickable = { menusVisible = true }) }
+        PackUI(isVisible = !menusVisible, greaterThanClickable = { menusVisible = true })
         Row(modifier = Modifier.fillMaxWidth()) {
             LaunchedEffect(Unit) {
                 menusVisible = true
