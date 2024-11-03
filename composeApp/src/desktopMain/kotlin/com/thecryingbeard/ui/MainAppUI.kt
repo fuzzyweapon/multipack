@@ -67,16 +67,13 @@ fun MainAppUI(
                         modifier = Modifier.padding(horizontal = padding),
                         style = MaterialTheme.typography.h6
                     )
-
-                    if (!menusVisible) {
-                        Text("/", style = MaterialTheme.typography.h6)
-                        AppState.selectedPack?.name?.let {
-                            Text(
-                                text = it,
-                                modifier = Modifier.padding(horizontal = padding),
-                                style = MaterialTheme.typography.h6
-                            )
-                        }
+                    Text("/", style = MaterialTheme.typography.h6)
+                    AppState.selectedPack?.name?.let {
+                        Text(
+                            text = it,
+                            modifier = Modifier.padding(horizontal = padding),
+                            style = MaterialTheme.typography.h6
+                        )
                     }
                 }
             }
