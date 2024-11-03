@@ -143,7 +143,7 @@ fun MainAppUI(
                 isVisible = menusVisible,
                 modifier = Modifier.weight(1f),
                 color = Color.LightGray,
-                libraryLoader = { game: Item? -> runBlocking { game?.let { loadPacks(viewModel, it) } } },
+                libraryLoader = { game: Item? ->  coroutineScope.launch { game?.let { loadPacks(viewModel, it) } } },
                 settingsLoader = { item: Item? -> item?.let { } },
                 background = { file -> if (AppState.selectedPack?.file == file) Color.LightGray else Color.Gray },
                 clickable = { pack ->
@@ -169,7 +169,7 @@ fun MainAppUI(
                 getPackName -> if (AppState.library != null && AppState.selectedGame != null) {
                     NameInputDialog({ getPackName = false }, { name ->
                         createNewFile(AppState.selectedGame!!.file.absolutePath, "$name.pack")
-                        runBlocking { loadPacks(viewModel, AppState.selectedGame!!) }
+                        coroutineScope.launch { loadPacks(viewModel, AppState.selectedGame!!) }
                         getPackName = false
                     })
                 }
