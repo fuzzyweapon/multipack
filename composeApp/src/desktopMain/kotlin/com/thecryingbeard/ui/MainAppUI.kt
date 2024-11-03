@@ -57,27 +57,7 @@ fun MainAppUI(
     var openGameSettings by remember { mutableStateOf(false) }
 
     Column {
-        if (!menusVisible) {
-            Row(modifier = Modifier.wrapContentSize().fillMaxWidth().padding(8.dp)) {
-                val padding = 4.dp
-                AppState.selectedGame?.name?.let { selectedGameName ->
-                    GreaterThanSymbol(clickable = { menusVisible = true })
-                    Text(
-                        text = selectedGameName,
-                        modifier = Modifier.padding(horizontal = padding),
-                        style = MaterialTheme.typography.h6
-                    )
-                    Text("/", style = MaterialTheme.typography.h6)
-                    AppState.selectedPack?.name?.let {
-                        Text(
-                            text = it,
-                            modifier = Modifier.padding(horizontal = padding),
-                            style = MaterialTheme.typography.h6
-                        )
-                    }
-                }
-            }
-        }
+        if (!menusVisible) { PackUI(greaterThanClickable = { menusVisible = true }) }
         Row(modifier = Modifier.fillMaxWidth()) {
             LaunchedEffect(Unit) {
                 menusVisible = true
