@@ -511,9 +511,9 @@ suspend fun loadPacks(viewModel: AppViewModel, game: Item) {
                 Pack(
                     name = file.name,
                     file = file,
-                    game = viewModel.games.firstOrNull { game ->
+                    game = viewModel.games.first { game ->
                         game.name == file.parentFile.name
-                    }!!
+                    }
                 )
             }
         )
